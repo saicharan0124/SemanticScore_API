@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/calculate-cosine-similarity/")
+@app.post("/calculate-cosine-similarity")
 async def calculate_cosine_similarity(data: InputData):
     try:
         # Encode the sentences
