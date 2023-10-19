@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer, util
 app = FastAPI()
 
 # Load the SentenceTransformer model
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 class StringInput(BaseModel):
     sentence1: str
