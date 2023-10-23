@@ -2,6 +2,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer, util
+from PIL import Image
+from io import BytesIO
+import matplotlib.pyplot as plt
+import numpy as np
+import base64
 
 app = FastAPI()
 
@@ -15,6 +20,9 @@ class StringInput(BaseModel):
 class ListInput(BaseModel):
     sentences1: list
     sentences2: list
+
+class MatrixInput(BaseModel):
+    matrix: list
 
 # Configure CORS settings
 app.add_middleware(
@@ -69,3 +77,41 @@ async def calculate_cosine_similarity(data: StringInput):
         return {"cosine_similarity": cos_sim}
     except Exception as e:
         raise HTTPException(status_code=500, detail="An error occurred during calculation")
+    
+@app.post("/convert-matrix-to-image")
+async def convert_matrix_to_image(data: MatrixInput):
+    try:
+        # Convert the matrix to a NumPy array
+        matrix_data = data.matrix
+        matrix = np.array(matrix_data)
+
+        # Create a tabulated image
+        fig_width = 10  # Set an initial figure width
+        num_columns = len(matrix[0])
+        cell_width = 1.0 / num_columns
+        fig_height = 1.5
+
+        # Calculate the required figure width based on the number of columns and cell size
+        if num_columns * cell_width > fig_width:
+            fig_width = num_columns * cell_width
+
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+        ax.axis('off')
+
+        table = ax.table(cellText=matrix, cellLoc='center', loc='center')
+        table.scale(1, fig_height / 1.5)  # Adjust the height proportionally
+
+        buf = BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight')
+        buf.seek(0)
+        plt.close()
+
+
+        
+
+        # Encode the image to base64
+        encoded_image = base64.b64encode(buf.read()).decode('utf-8')
+
+        return {"tabulated_image": encoded_image}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An error occurred during image conversion")
